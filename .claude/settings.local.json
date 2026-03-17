@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python save_token.py)",
+      "Bash(python test_web.py)"
+    ]
+  }
+}
