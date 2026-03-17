@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python save_token.py)",
+      "Bash(python test_web.py)",
+      "Bash(python testcases/test_web.py)",
+      "Bash(python:*)",
+      "Bash(cd:*)",
+      "Bash(pip install:*)"
+    ]
+  }
+}
