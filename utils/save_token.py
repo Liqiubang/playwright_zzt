@@ -10,8 +10,9 @@ from playwright.sync_api import sync_playwright
 def save_token():
     """登录并保存 token 到文件"""
 
-    login_url = "https://cloudsit.cm253.com/control/login"
-    token_file = "utils/token.json"
+    login_url = "https://www.chuanglan.com/control/login"
+    # login_url = "https://cloudsit.cm253.com/control/login"
+    token_file = "C:\\Users\\15274\\PycharmProjects\\playwright_test\\utils\\token.json"
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)

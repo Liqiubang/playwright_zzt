@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+<<<<<<< HEAD
   <component name="Black">
     <option name="sdkName" value="Python 3.13 (playwright_test)" />
   </component>
+=======
+>>>>>>> f14b2e4fa00b9a56edb38c71023833f8367952c2
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.13 (playwright_test)" project-jdk-type="Python SDK" />
 </project>

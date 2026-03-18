@@ -12,96 +12,106 @@ class TestWeb():
     TOKEN_FILE = "utils/token.json"
 
 
-def test_send_constant_sms(browser_context,env_config):
+def test_send_constant_sms(browser_context, env_config):
     page = browser_context
     page.goto(f"{env_config['constant_send_url']}")
-    page.wait_for_timeout(1000)
-
     # 截图：首页
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_home.png"))
-
     page.get_by_role("link", name="短信发送", exact=True).click()
     page.get_by_role("button", name="短信群发").click()
     page.get_by_role("button", name="手动添加").click()
     page.get_by_role("dialog", name="手动添加").get_by_role("textbox").fill(f"{env_config['phone']}")
     page.get_by_role("button", name="确 定").click()
-
     # 截图：添加号码后
-    page.wait_for_timeout(1000)
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_add_number.png"))
-
     page.locator("#onlinesendForm").get_by_text("选择模板").click()
     page.get_by_role("textbox", name="模板内容 :").click()
     page.get_by_role("textbox", name="模板内容 :").fill(f"{env_config['constant_template']}")
     page.get_by_role("button", name="查 询").click()
-    page.get_by_text("选择", exact=True).click()
-    page.wait_for_timeout(1000)
+    # 使用更精确的选择器，定位到表格中的"选择"按钮
+    page.locator("table tbody tr a").filter(has_text="选择").first.click()
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
-
     # 截图：发送成功
-    page.wait_for_timeout(1000)
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c3_success.png"))
-
     # 验证发送成功
     expect(page.locator("html").get_by_role("document")).to_contain_text("已经成功提交发送")
 
-def test_send_variable_sms(browser_context,env_config):
+    # page.wait_for_timeout(120000)
+    # page.goto(f"{env_config['send_records_url']}")
+    # # 等待页面加载
+    # page.wait_for_timeout(3000)
+    # # 获取期望的模板内容（带签名的完整内容）
+    # expected_content = f"{env_config['assert_constant_template']}"
+    # # 断言 1：验证发送内容与模板内容一致
+    # # 在表格中查找包含期望内容的单元格
+    # page.wait_for_selector(f'text={expected_content[:20]}', timeout=10000)
+    # content_cell = page.locator(f'td:has-text("{expected_content}")').first
+    # assert content_cell.count() > 0, f"发送记录中未找到期望的内容：{expected_content}"
+    # # 断言 2：验证状态码为 DELIVRD
+    # # 查找同一行中的状态码（DELIVRD）
+    # status_cell = page.locator('td:has-text("DELIVRD")').first
+    # assert status_cell.count() > 0, "发送记录中未找到状态码 DELIVRD"
+    # page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c4_assert.png"))
+    # print(f"\n[OK] 断言通过：发送内容包含 '{expected_content[:30]}...'，状态码为 DELIVRD")
+
+
+
+
+def test_send_variable_sms(browser_context, env_config):
     page = browser_context
     page.goto(f"{env_config['variable_send_url']}")
-    page.wait_for_timeout(1000)
-
     # 截图：首页
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v1_home.png"))
-
     page.get_by_role("link", name="变量短信发送", exact=True).click()
-    page.wait_for_timeout(1000)
     page.get_by_role("button", name="短信群发").click()
-    page.wait_for_timeout(500)
-
     page.locator("#onlinesendForm").get_by_text("选择模板").click()
     page.get_by_role("textbox", name="模板内容 :").click()
     page.get_by_role("textbox", name="模板内容 :").fill(f"{env_config['variable_template']}")
     page.get_by_role("button", name="查 询").click()
-    page.get_by_text("选择", exact=True).click()
-    page.wait_for_timeout(1000)
+    # 使用更精确的选择器，定位到表格中的"选择"按钮
+    page.locator("table tbody tr a").filter(has_text="选择").first.click()
     page.get_by_role("button", name="导入变量内容").click()
-
-    # 等待导入文件对话框出现
-    page.wait_for_timeout(1000)
-
     # 截图：导入文件对话框
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v2_import_dialog.png"))
-
     # 使用 file chooser 来上传本地文件
     # 先点击上传区域触发文件选择器
     with page.expect_file_chooser() as fc_info:
         page.get_by_role("heading", name="点击或将文件拖拽到这里上传").click()
     file_chooser = fc_info.value
-
     # 设置要上传的本地文件路径（使用绝对路径）
     local_file_path = os.path.abspath("C:\\Users\\15274\\OneDrive\\guoneibianliang.txt")
     print(f"\n[INFO] 上传文件路径：{local_file_path}")
-
     # 设置文件
     file_chooser.set_files(local_file_path)
-
-    page.wait_for_timeout(1000)
     page.get_by_role("button", name="开始上传").click()
-
     # 截图：上传完成
-    page.wait_for_timeout(1000)
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v3_uploaded.png"))
-
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
-
     # 截图：发送成功
-    page.wait_for_timeout(1000)
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v4_success.png"))
-
     # 验证发送成功
     expect(page.locator("html").get_by_role("document")).to_contain_text("已经成功提交发送")
+
+    # page.wait_for_timeout(120000)
+    # page.goto(f"{env_config['send_records_url']}")
+    # # 等待页面加载
+    # page.wait_for_timeout(3000)
+    # # 获取期望的模板内容（带签名的完整内容）
+    # expected_content = f"{env_config['assert_variable_template']}"
+    # # 断言 1：验证发送内容与模板内容一致
+    # # 在表格中查找包含期望内容的单元格
+    # page.wait_for_selector(f'text={expected_content[:20]}', timeout=10000)
+    # content_cell = page.locator(f'td:has-text("{expected_content}")').first
+    # assert content_cell.count() > 0, f"发送记录中未找到期望的内容：{expected_content}"
+    # # 断言 2：验证状态码为 DELIVRD
+    # # 查找同一行中的状态码（DELIVRD）
+    # status_cell = page.locator('td:has-text("DELIVRD")').first
+    # assert status_cell.count() > 0, "发送记录中未找到状态码 DELIVRD"
+    # page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v5_assert.png"))
+    # print(f"\n[OK] 断言通过：发送内容包含 '{expected_content[:30]}...'，状态码为 DELIVRD")
+
 
 
 def generate_html_report(test_results):
@@ -115,7 +125,8 @@ def generate_html_report(test_results):
     screenshot_files_constant = [
         ("c1_home.png", "1️⃣ 首页"),
         ("c2_add_number.png", "2️⃣ 添加手机号"),
-        ("c3_success.png", "3️⃣ 发送成功")
+        ("c3_success.png", "3️⃣ 发送成功"),
+        ("c4_assert.png", "4️⃣ 断言验证（发送记录）")
     ]
 
     screenshots_variable = {}
@@ -123,7 +134,8 @@ def generate_html_report(test_results):
         ("v1_home.png", "1️⃣ 首页"),
         ("v2_import_dialog.png", "2️⃣ 导入文件对话框"),
         ("v3_uploaded.png", "3️⃣ 文件上传完成"),
-        ("v4_success.png", "4️⃣ 发送成功")
+        ("v4_success.png", "4️⃣ 发送成功"),
+        ("v5_assert.png", "5️⃣ 断言验证（发送记录）")
     ]
 
     for filename, title in screenshot_files_constant:
@@ -203,7 +215,8 @@ def generate_html_report(test_results):
         <div class="test-info">
             <h2>测试概要</h2>
             <table class="info-table">
-                <tr><th>测试 URL</th><td>http://172.16.41.223:9999/control/sms/cl_yzm_sms/home</td></tr>
+                <tr><th>固定短信 URL</th><td>{test_results.get('constant_send_url', '')}</td></tr>
+                <tr><th>变量短信 URL</th><td>{test_results.get('variable_send_url', '')}</td></tr>
                 <tr><th>测试时间</th><td>{test_results['timestamp']}</td></tr>
                 <tr><th>整体结果</th><td class="{'status-pass' if test_results['passed'] else 'status-fail'}">{'✅ PASSED (通过)' if test_results['passed'] else '❌ FAILED (失败)'}</td></tr>
                 <tr><th>免登录状态</th><td>{'✅ 已使用保存的 token' if test_results['use_token'] else '⚠️ 未检测到 token'}</td></tr>
@@ -299,6 +312,13 @@ if __name__ == "__main__":
         f"--json-report-file={json_report_path}"
     ])
 
+    # 读取配置中的 URL
+    import yaml
+    with open('C:\\Users\\15274\\PycharmProjects\\playwright_test\\config\\config.yml', 'r', encoding='utf-8') as f:
+        _cfg = yaml.safe_load(f)
+    _env = os.getenv("prod", "prod")
+    _env_cfg = _cfg["environments"][_env]
+
     # 读取 JSON 报告
     test_results = {
         "total": 2,
@@ -307,6 +327,8 @@ if __name__ == "__main__":
         "passed": exit_code == 0,
         "timestamp": start_time.strftime("%Y-%m-%d %H:%M:%S"),
         "use_token": os.path.exists(TestWeb.TOKEN_FILE),
+        "constant_send_url": _env_cfg.get("constant_send_url", ""),
+        "variable_send_url": _env_cfg.get("variable_send_url", ""),
         "cases": {}
     }
 

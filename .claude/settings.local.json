@@ -2,11 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(python save_token.py)",
+<<<<<<< HEAD
       "Bash(python test_web.py)",
       "Bash(python testcases/test_web.py)",
       "Bash(python:*)",
       "Bash(cd:*)",
       "Bash(pip install:*)"
+=======
+      "Bash(python test_web.py)"
+>>>>>>> f14b2e4fa00b9a56edb38c71023833f8367952c2
     ]
   }
 }
