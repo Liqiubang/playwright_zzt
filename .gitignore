@@ -22,3 +22,11 @@ env/
 # Playwright
 test-results/
 playwright-report/
+
+# Test outputs
+screenshot/
+report/
+
+# Local config and tokens
+.claude/settings.local.json
+utils/token.json

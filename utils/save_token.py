@@ -15,8 +15,11 @@ def save_token():
     token_file = "C:\\Users\\15274\\PycharmProjects\\playwright_test\\utils\\token.json"
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context()
+        browser = p.chromium.launch(
+            headless=False,
+            args=['--start-maximized']  # 启动时最大化窗口
+        )
+        context = browser.new_context(no_viewport=True)  # 禁用固定视口，使用实际窗口大小
         page = context.new_page()
 
         # 访问登录页面

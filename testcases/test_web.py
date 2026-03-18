@@ -7,9 +7,10 @@ from playwright.sync_api import Page, expect
 
 
 class TestWeb():
-    SCREENSHOT_DIR = "screenshot"
-    REPORT_DIR = "report"
-    TOKEN_FILE = "utils/token.json"
+    PROJECT_ROOT = r"C:\Users\15274\PycharmProjects\playwright_test"
+    SCREENSHOT_DIR = os.path.join(PROJECT_ROOT, "screenshot")
+    REPORT_DIR = os.path.join(PROJECT_ROOT, "report")
+    TOKEN_FILE = os.path.join(PROJECT_ROOT, "utils", "token.json")
 
 
 def test_send_constant_sms(browser_context, env_config):
@@ -35,7 +36,7 @@ def test_send_constant_sms(browser_context, env_config):
     # 截图：发送成功
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c3_success.png"))
     # 验证发送成功
-    expect(page.locator("html").get_by_role("document")).to_contain_text("已经成功提交发送")
+    expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
 
     # page.wait_for_timeout(120000)
     # page.goto(f"{env_config['send_records_url']}")
@@ -92,7 +93,7 @@ def test_send_variable_sms(browser_context, env_config):
     # 截图：发送成功
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v4_success.png"))
     # 验证发送成功
-    expect(page.locator("html").get_by_role("document")).to_contain_text("已经成功提交发送")
+    expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
 
     # page.wait_for_timeout(120000)
     # page.goto(f"{env_config['send_records_url']}")
