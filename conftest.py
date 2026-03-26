@@ -27,7 +27,7 @@ def browser_context():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=False,  # 关闭无头模式，显示浏览器
-            slow_mo=1000,  # 每个操作延迟 500ms，方便观察
+            slow_mo=1000,  # 每个操作延迟 1000ms，方便观察
             args=['--start-maximized']  # 启动时最大化窗口
         )
 
@@ -55,7 +55,7 @@ def load_config():
 
 @pytest.fixture(scope="session")
 def env_config():
-    #env = os.getenv("sit", "sit")
+    # env = os.getenv("sit", "sit")
     env = os.getenv("prod", "prod")
     config = load_config()
     return config["environments"][env]

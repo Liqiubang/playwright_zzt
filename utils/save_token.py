@@ -27,8 +27,8 @@ def save_token():
         page.goto(login_url)
         page.wait_for_timeout(2000)
 
-        print("\n请在浏览器中手动输入账号密码并登录...")
-        print("登录成功后等待 30 秒，脚本会自动保存 token 并关闭浏览器\n")
+        print("请在浏览器中手动输入账号密码并登录...")
+        print("您有30秒的输入时间，脚本会自动保存 token 并关闭浏览器")
 
         # 等待用户手动完成登录
         page.wait_for_timeout(30000)
@@ -46,7 +46,7 @@ def save_token():
         with open(token_file, "w", encoding="utf-8") as f:
             json.dump(token_data, f, ensure_ascii=False, indent=2)
 
-        print(f"\n[OK] Token 已保存到 {token_file}")
+        print(f"[OK] Token 已保存到 {token_file}")
 
         browser.close()
 
