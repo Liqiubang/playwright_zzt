@@ -14,10 +14,19 @@ class TestWeb():
 
     @staticmethod
     def load_token():
-        """从文件加载 token"""
+        """从文件加载 token（支持新格式：按站点分组）"""
         if os.path.exists(TestWeb.TOKEN_FILE):
             with open(TestWeb.TOKEN_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                # 新格式：{ "cloudsit": {...}, "smart_operation": {...} }
+                if "cloudsit" in data or "smart_operation" in data:
+                    all_cookies = []
+                    for site_key in ("cloudsit", "smart_operation"):
+                        if site_key in data:
+                            all_cookies.extend(data[site_key].get("cookies", []))
+                    return {"cookies": all_cookies}
+                # 兼容旧格式：{ "cookies": [...] }
+                return data
         return None
 
 

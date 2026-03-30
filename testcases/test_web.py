@@ -1,3 +1,5 @@
+import re
+
 import pytest
 import json
 import os
@@ -12,6 +14,178 @@ class TestWeb():
     REPORT_DIR = os.path.join(PROJECT_ROOT, "report")
     TOKEN_FILE = os.path.join(PROJECT_ROOT, "utils", "token.json")
 
+def test_signature_and_template(browser_context, env_config):
+    page = browser_context
+    sd = TestWeb.SCREENSHOT_DIR
+
+    # ===== 签名部分 =====
+
+    # 步骤1：导航到签名管理页面
+    page.goto(f"{env_config['create_signature_url']}")
+
+    # 步骤2：点击"新建签名"按钮，打开新建表单
+    page.get_by_role("button", name="新建签名").click()
+    # 截图：新建签名表单已弹出
+    page.screenshot(path=os.path.join(sd, "s02_new_signature_form.png"))
+
+    # 步骤3：点击签名名称输入框并填写签名名称（来自配置）
+    page.get_by_role("textbox", name="* 签名名称").click()
+    page.get_by_role("textbox", name="* 签名名称").fill(f"{env_config['signature']}")
+    # 截图：签名名称已填写
+    page.screenshot(path=os.path.join(sd, "s03_fill_name.png"))
+
+    # 步骤4：点击"行业选择"下拉框，选择"网络游戏"
+    page.get_by_role("combobox", name="* 行业选择").click()
+    page.get_by_text("网络游戏").click()
+
+
+    # 步骤5：点击"签名类型"下拉框，选择"企业名称"
+    page.get_by_role("combobox", name="* 签名类型").click()
+    page.get_by_text("企业名称").click()
+
+
+    # 步骤6：选择"他用"单选按钮（force=True 绕过遮挡层）
+    page.get_by_role("radio", name="他用(签名为他人实名认证的企业事业单位、APP、商标等)").check()
+
+
+    # 步骤7：点击"APP/官网链接"输入框并填写链接（填"1"占位）
+    page.get_by_role("textbox", name="* APP/官网链接").click()
+    page.get_by_role("textbox", name="* APP/官网链接").fill("1")
+
+
+    # 步骤8：点击"终端客户信息"下拉框，选择"深圳市天视通技术有限公司"
+    page.get_by_role("combobox", name="* 终端客户信息").click()
+    page.get_by_text(f"{env_config['company']}").click()
+    # 截图：终端客户已选择
+    page.screenshot(path=os.path.join(sd, "s08_select_customer.png"))
+
+    # 步骤8.5：上传签名授权书（"他用"模式必填证明材料）
+    auth_file = os.path.join(TestWeb.PROJECT_ROOT, "testdata", "authorization.png")
+    with page.expect_file_chooser() as fc_info:
+        page.locator(".sms-upload").first.click()
+    file_chooser = fc_info.value
+    file_chooser.set_files(auth_file)
+    # 截图：授权书已上传
+    page.screenshot(path=os.path.join(sd, "s09_upload_auth.png"))
+
+    # 步骤9：点击"提交审核"按钮，等待后端响应后截图
+    page.get_by_role("button", name="提交审核").click()
+
+    # 步骤10：断言成功弹窗出现（弹窗文本包含该关键词即可），点击"我知道了"关闭弹窗
+    expect(page.get_by_text("您的签名已提交审核", exact=False)).to_be_visible(timeout=10000)
+    # 截图：提交成功弹窗可见
+    page.screenshot(path=os.path.join(sd, "s10_submit_success.png"))
+    page.get_by_role("button", name="我知道了").click()
+
+    # # 步骤11：智能运营后台 - 打开新标签页审核签名
+    # page2 = page.context.new_page()
+    # page2.goto(f"{env_config['smart_audit_signature_url']}")
+    # page2.screenshot(path=os.path.join(sd, "s11_smart_audit_page.png"))
+    #
+    # # 步骤12：搜索签名
+    # page2.get_by_role("textbox", name="请输入签名搜索").click()
+    # page2.get_by_role("textbox", name="请输入签名搜索").fill(f"{env_config['signature']}")
+    # page2.get_by_role("button", name="搜 索").click()
+    # page2.wait_for_timeout(2000)
+    # page2.screenshot(path=os.path.join(sd, "s12_smart_search_result.png"))
+    #
+    # # 步骤13：驳回签名
+    # page2.get_by_text("驳回", exact=True).click()
+    # page2.get_by_text("测试驳回", exact=True).click()
+    # page2.screenshot(path=os.path.join(sd, "s13_smart_reject_dialog.png"))
+    # page2.get_by_role("button", name="确 认").click()
+    # page2.get_by_role("button", name="确 认").click()
+    # page2.wait_for_timeout(2000)
+    # page2.screenshot(path=os.path.join(sd, "s14_smart_reject_done.png"))
+    #
+    # # 步骤14：切回自助通页面，搜索并删除被驳回的签名
+    # page.bring_to_front()
+    # page.wait_for_timeout(2000)
+    # page.screenshot(path=os.path.join(sd, "s15_back_to_signature_page.png"))
+
+    # 步骤15：在搜索框中输入签名名称并点击"搜 索"，等待结果加载后截图
+    page.get_by_role("textbox", name="请输入搜索关键词").click()
+    page.get_by_role("textbox", name="请输入搜索关键词").fill(f"{env_config['signature']}")
+    # 点击搜索按钮，触发列表刷新
+    page.get_by_role("button", name="搜 索").click()
+    # 等待搜索结果中出现签名名称文本，确认数据已加载
+    expect(page.get_by_text(env_config['signature'])).to_be_visible(timeout=10000)
+
+    # 步骤16：点击列表中第一个"删除"链接，弹出确认对话框后确认删除
+
+    page.wait_for_timeout(2000)
+    page.screenshot(path=os.path.join(sd, "s17_after_delete.png"))
+    page.get_by_text("删除").first.click()
+    page.get_by_role("button", name="确 定").click()
+
+    # 断言：验证删除签名成功提示可见（toast消失很快，必须立即断言）
+    expect(page.get_by_text("删除签名成功")).to_be_visible()
+    # 截图：删除成功 toast 提示
+    page.screenshot(path=os.path.join(sd, "s18_delete_result.png"))
+
+    # ===== 模板部分 =====
+
+    # 步骤17：导航到模板管理页面
+    page.goto(f"{env_config['create_template_url']}")
+    # 截图：模板管理页面
+    page.screenshot(path=os.path.join(sd, "t01_template_page.png"))
+
+    # 步骤18：点击"新建模板"按钮，打开新建表单
+    page.get_by_role("button", name="新建模板").click()
+    # 截图：新建模板表单已弹出
+    page.screenshot(path=os.path.join(sd, "t02_new_template_form.png"))
+
+    # 步骤19：填写模板名称
+    page.get_by_role("textbox", name="* 模板名称").click()
+    page.get_by_role("textbox", name="* 模板名称").fill("测试模板")
+
+    # 步骤20：点击关联签名下拉框（通过 id 定位，force=True 绕过 sms-select-selection-item 遮挡）
+    page.locator("input#signature").click(force=True)
+    # 等待下拉选项渲染完成后选择"创蓝云智"
+    page.wait_for_selector(".sms-select-item-option-content", timeout=5000)
+    page.locator(".sms-select-item-option-content").filter(has_text="创蓝云智").click()
+    # 截图：模板表单基本信息已填写
+    page.screenshot(path=os.path.join(sd, "t03_fill_template_form.png"))
+
+    # 步骤21：点击模板内容编辑区域（第5个 paragraph）激活输入
+    page.get_by_role("paragraph").nth(4).click()
+    page.get_by_role("paragraph").nth(4).click()
+    # 步骤22：在第4个文本框中填写模板正文内容（来自配置）
+    page.get_by_role("textbox").nth(3).fill(f"{env_config['template']}")
+
+    # 步骤23：点击模板类型级联选择器，依次选择"业务管理和服务类 > 其他用途"
+    page.locator(".sms-cascader-picker-label").click()
+    page.get_by_role("menuitem", name="业务管理和服务类 right").click()
+    page.get_by_role("menuitem", name="其他用途").click()
+
+    # 步骤24：勾选退订方式"拒收请回复R"单选项
+    page.get_by_role("radio", name="拒收请回复R").check()
+    # 截图：提交前表单完整状态
+    page.screenshot(path=os.path.join(sd, "t04_before_submit.png"))
+
+    # 步骤25：点击"提交审核"按钮，等待后端响应后截图
+    page.get_by_role("button", name="提交审核").click()
+
+
+    # 步骤26：点击"我知道了"关闭提交成功弹窗
+    page.get_by_role("button", name="我知道了").click()
+
+    # 步骤27：删除模板
+    page.get_by_text("标题").click()
+    page.get_by_text("内容", exact=True).click()
+    page.get_by_role("textbox", name="请输入搜索关键词").click()
+    page.get_by_role("textbox", name="请输入搜索关键词").fill(f"{env_config['template']}")
+    page.get_by_role("button", name="搜 索").click()
+
+    page.wait_for_timeout(2000)
+    page.screenshot(path=os.path.join(sd, "t05_after_delete.png"))
+    page.get_by_text("删除").first.click()
+    page.get_by_role("button", name="确 定").click()
+
+    # 断言：验证删除模板成功提示可见
+    expect(page.get_by_text("删除模板成功")).to_be_visible()
+    # 截图：删除成功 toast 提示
+    page.screenshot(path=os.path.join(sd, "t06_delete_result.png"))
 
 def test_send_constant_sms(browser_context, env_config):
     page = browser_context
@@ -24,7 +198,7 @@ def test_send_constant_sms(browser_context, env_config):
     page.get_by_role("dialog", name="手动添加").get_by_role("textbox").fill(f"{env_config['phone']}")
     page.get_by_role("button", name="确 定").click()
     # 截图：添加号码后
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_add_number.png"))
+    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_add_number.png"))
     page.locator("#onlinesendForm").get_by_text("选择模板").click()
     page.get_by_role("textbox", name="模板内容 :").click()
     page.get_by_role("textbox", name="模板内容 :").fill(f"{env_config['constant_template']}")
@@ -34,7 +208,7 @@ def test_send_constant_sms(browser_context, env_config):
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
     # 截图：发送成功
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c3_success.png"))
+    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_success.png"))
     # 验证发送成功
     expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
 
@@ -63,7 +237,7 @@ def test_send_variable_sms(browser_context, env_config):
     page = browser_context
     page.goto(f"{env_config['variable_send_url']}")
     # 截图：首页
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v1_home.png"))
+    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_home.png"))
     page.get_by_role("link", name="变量短信发送", exact=True).click()
     page.get_by_role("button", name="短信群发").click()
     page.locator("#onlinesendForm").get_by_text("选择模板").click()
@@ -74,7 +248,7 @@ def test_send_variable_sms(browser_context, env_config):
     page.locator("table tbody tr a").filter(has_text="选择").first.click()
     page.get_by_role("button", name="导入变量内容").click()
     # 截图：导入文件对话框
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v2_import_dialog.png"))
+    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_import_dialog.png"))
     # 使用 file chooser 来上传本地文件
     # 先点击上传区域触发文件选择器
     with page.expect_file_chooser() as fc_info:
@@ -87,11 +261,11 @@ def test_send_variable_sms(browser_context, env_config):
     file_chooser.set_files(local_file_path)
     page.get_by_role("button", name="开始上传").click()
     # 截图：上传完成
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v3_uploaded.png"))
+    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_uploaded.png"))
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
     # 截图：发送成功
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v4_success.png"))
+    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_success.png"))
     # 验证发送成功
     expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
 
@@ -115,43 +289,81 @@ def test_send_variable_sms(browser_context, env_config):
 
 
 
+def _load_screenshots(file_list):
+    """读取截图列表并转为 base64 字典"""
+    result = {}
+    for filename, _ in file_list:
+        filepath = os.path.join(TestWeb.SCREENSHOT_DIR, filename)
+        if os.path.exists(filepath):
+            with open(filepath, "rb") as f:
+                result[filename] = f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+    return result
+
+
+def _render_screenshots(screenshots, file_list):
+    """生成截图卡片 HTML"""
+    html = ""
+    for filename, title in file_list:
+        if filename in screenshots:
+            html += f'''
+                <div class="screenshot-card">
+                    <h3>{title}</h3>
+                    <img src="{screenshots[filename]}" alt="{filename}">
+                </div>'''
+    return html
+
+
 def generate_html_report(test_results):
     """生成 HTML 测试报告"""
 
-    # 确保报告目录存在
     os.makedirs(TestWeb.REPORT_DIR, exist_ok=True)
 
-    # 读取截图并转换为 base64
-    screenshots_constant = {}
+    # 签名+模板用例截图
+    sig_tmpl_files = [
+        ("s01_signature_page.png",       "步骤01 签名管理页面"),
+        ("s02_new_signature_form.png",    "步骤02 新建签名表单"),
+        ("s03_fill_name.png",             "步骤03 填写签名名称"),
+        ("s04_select_industry.png",       "步骤04 选择行业"),
+        ("s05_select_type.png",           "步骤05 选择签名类型"),
+        ("s06_select_self_use.png",       "步骤06 选择自用"),
+        ("s07_fill_link.png",             "步骤07 填写APP链接"),
+        ("s08_select_customer.png",       "步骤08 选择终端客户"),
+        ("s09_submit_audit.png",          "步骤09 提交审核"),
+        ("s10_submit_success.png",        "步骤10 提交成功弹窗"),
+        ("s16_search_rejected.png",       "步骤11 搜索签名"),
+        ("s17_delete_confirm_dialog.png", "步骤12 删除确认弹窗"),
+        ("s18_delete_result.png",         "步骤13 删除结果"),
+        ("t01_template_page.png",         "步骤14 模板管理页面"),
+        ("t02_new_template_form.png",     "步骤15 新建模板表单"),
+        ("t03_fill_template_form.png",    "步骤16 填写模板"),
+        ("t04_before_submit.png",         "步骤17 提交前"),
+        ("t05_after_submit.png",          "步骤18 提交后"),
+    ]
+
+    # 固定短信截图
     screenshot_files_constant = [
-        ("c1_home.png", "1️⃣ 首页"),
-        ("c2_add_number.png", "2️⃣ 添加手机号"),
-        ("c3_success.png", "3️⃣ 发送成功"),
-        ("c4_assert.png", "4️⃣ 断言验证（发送记录）")
+        ("c1_home.png",       "首页"),
+        ("c1_add_number.png", "添加手机号"),
+        ("c1_success.png",    "发送成功"),
     ]
 
-    screenshots_variable = {}
+    # 变量短信截图
     screenshot_files_variable = [
-        ("v1_home.png", "1️⃣ 首页"),
-        ("v2_import_dialog.png", "2️⃣ 导入文件对话框"),
-        ("v3_uploaded.png", "3️⃣ 文件上传完成"),
-        ("v4_success.png", "4️⃣ 发送成功"),
-        ("v5_assert.png", "5️⃣ 断言验证（发送记录）")
+        ("c2_home.png",          "首页"),
+        ("c2_import_dialog.png", "导入文件对话框"),
+        ("c2_uploaded.png",      "文件上传完成"),
+        ("c2_success.png",       "发送成功"),
     ]
 
-    for filename, title in screenshot_files_constant:
-        filepath = os.path.join(TestWeb.SCREENSHOT_DIR, filename)
-        if os.path.exists(filepath):
-            with open(filepath, "rb") as f:
-                img_data = base64.b64encode(f.read()).decode()
-                screenshots_constant[filename] = f"data:image/png;base64,{img_data}"
+    screenshots_sig_tmpl  = _load_screenshots(sig_tmpl_files)
+    screenshots_constant  = _load_screenshots(screenshot_files_constant)
+    screenshots_variable  = _load_screenshots(screenshot_files_variable)
 
-    for filename, title in screenshot_files_variable:
-        filepath = os.path.join(TestWeb.SCREENSHOT_DIR, filename)
-        if os.path.exists(filepath):
-            with open(filepath, "rb") as f:
-                img_data = base64.b64encode(f.read()).decode()
-                screenshots_variable[filename] = f"data:image/png;base64,{img_data}"
+    overall_cls = 'success' if test_results['passed'] else 'fail'
+    pass_color  = '#28a745' if test_results['passed'] else '#dc3545'
+    fail_color  = '#dc3545' if not test_results['passed'] else '#28a745'
+    overall_txt = '✅ PASSED (通过)' if test_results['passed'] else '❌ FAILED (失败)'
+    token_txt   = '✅ 已使用保存的 token' if test_results['use_token'] else '⚠️ 未检测到 token'
 
     html_content = f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -162,7 +374,7 @@ def generate_html_report(test_results):
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; padding: 20px; }}
-        .container {{ max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        .container {{ max-width: 1400px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
         .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 30px; border-radius: 8px 8px 0 0; }}
         .header h1 {{ font-size: 28px; margin-bottom: 10px; }}
         .header p {{ opacity: 0.9; }}
@@ -176,16 +388,16 @@ def generate_html_report(test_results):
         .test-info h2 {{ color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }}
         .info-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
         .info-table th, .info-table td {{ padding: 12px; text-align: left; border-bottom: 1px solid #eee; }}
-        .info-table th {{ background: #f8f9fa; color: #333; font-weight: 600; }}
+        .info-table th {{ background: #f8f9fa; color: #333; font-weight: 600; width: 160px; }}
         .case-section {{ margin: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; }}
         .case-section h2 {{ color: #333; margin-bottom: 15px; }}
         .case-result {{ display: inline-block; padding: 5px 15px; border-radius: 4px; color: #fff; font-weight: bold; }}
         .case-result.pass {{ background: #28a745; }}
         .case-result.fail {{ background: #dc3545; }}
-        .screenshots {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 20px; }}
+        .screenshots {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; padding: 20px 0; }}
         .screenshot-card {{ background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-        .screenshot-card h3 {{ padding: 15px; background: #f8f9fa; color: #333; font-size: 14px; border-bottom: 1px solid #eee; }}
-        .screenshot-card img {{ width: 100%; height: auto; display: block; }}
+        .screenshot-card h3 {{ padding: 10px 15px; background: #f0f0f0; color: #444; font-size: 13px; border-bottom: 1px solid #ddd; }}
+        .screenshot-card img {{ width: 100%; height: auto; display: block; cursor: zoom-in; }}
         .footer {{ padding: 20px; text-align: center; color: #666; border-top: 1px solid #eee; }}
         .status-pass {{ color: #28a745; font-weight: bold; }}
         .status-fail {{ color: #dc3545; font-weight: bold; }}
@@ -194,88 +406,72 @@ def generate_html_report(test_results):
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 自动化测试报告</h1>
-            <p>短信发送功能自动化测试（固定短信 + 变量短信）</p>
+            <h1>自动化测试报告</h1>
+            <p>签名与模板创建 / 固定短信 / 变量短信 全流程自动化测试</p>
         </div>
-
         <div class="summary">
-            <div class="summary-card {'success' if test_results['passed'] else 'fail'}">
+            <div class="summary-card {overall_cls}">
                 <div class="count">{test_results['total']}</div>
                 <div class="label">总测试数</div>
             </div>
-            <div class="summary-card {'success' if test_results['passed'] else 'fail'}">
-                <div class="count" style="color: {'#28a745' if test_results['passed'] else '#dc3545'}">{test_results['passed_count']}</div>
+            <div class="summary-card success">
+                <div class="count" style="color:{pass_color}">{test_results['passed_count']}</div>
                 <div class="label">通过</div>
             </div>
-            <div class="summary-card {'success' if not test_results['passed'] else ''}">
-                <div class="count" style="color: {'#dc3545' if not test_results['passed'] else '#28a745'}">{test_results['failed_count']}</div>
+            <div class="summary-card {'fail' if test_results['failed_count'] else 'success'}">
+                <div class="count" style="color:{fail_color}">{test_results['failed_count']}</div>
                 <div class="label">失败</div>
             </div>
         </div>
-
         <div class="test-info">
             <h2>测试概要</h2>
             <table class="info-table">
-                <tr><th>固定短信 URL</th><td>{test_results.get('constant_send_url', '')}</td></tr>
-                <tr><th>变量短信 URL</th><td>{test_results.get('variable_send_url', '')}</td></tr>
                 <tr><th>测试时间</th><td>{test_results['timestamp']}</td></tr>
-                <tr><th>整体结果</th><td class="{'status-pass' if test_results['passed'] else 'status-fail'}">{'✅ PASSED (通过)' if test_results['passed'] else '❌ FAILED (失败)'}</td></tr>
-                <tr><th>免登录状态</th><td>{'✅ 已使用保存的 token' if test_results['use_token'] else '⚠️ 未检测到 token'}</td></tr>
+                <tr><th>整体结果</th><td class="{'status-pass' if test_results['passed'] else 'status-fail'}">{overall_txt}</td></tr>
+                <tr><th>免登录状态</th><td>{token_txt}</td></tr>
             </table>
         </div>
 '''
 
-    # 用例 1：固定短信发送
-    case1_result = test_results['cases'].get('testcases/test_web.py::test_send_constant_sms', {})
-    case1_passed = case1_result.get('passed', False)
-    html_content += f'''
+    def _case_section(title, nodeid, desc, screenshots_dict, file_list):
+        r = test_results['cases'].get(nodeid, {})
+        p = r.get('passed', False)
+        cls = 'pass' if p else 'fail'
+        label = 'PASSED' if p else 'FAILED'
+        res_cls = 'status-pass' if p else 'status-fail'
+        res_txt = '✅ 通过' if p else '❌ 失败'
+        imgs = _render_screenshots(screenshots_dict, file_list)
+        return f'''
         <div class="case-section">
-            <h2>用例 1：固定短信发送 <span class="case-result {'pass' if case1_passed else 'fail'}">{'PASSED' if case1_passed else 'FAILED'}</span></h2>
+            <h2>{title} <span class="case-result {cls}">{label}</span></h2>
             <table class="info-table">
-                <tr><th>测试说明</th><td>手动添加手机号，发送固定内容的短信</td></tr>
-                <tr><th>测试结果</th><td class="{'status-pass' if case1_passed else 'status-fail'}">{'✅ 通过' if case1_passed else '❌ 失败'}</td></tr>
+                <tr><th>测试说明</th><td>{desc}</td></tr>
+                <tr><th>测试结果</th><td class="{res_cls}">{res_txt}</td></tr>
             </table>
-            <h3 style="margin-top: 20px; color: #333;">测试步骤截图</h3>
-            <div class="screenshots">
-'''
-    for filename, title in screenshot_files_constant:
-        if filename in screenshots_constant:
-            html_content += f'''
-                <div class="screenshot-card">
-                    <h3>{title}</h3>
-                    <img src="{screenshots_constant[filename]}" alt="{filename}">
-                </div>
-'''
-    html_content += '''
-            </div>
-        </div>
-'''
+            <h3 style="margin-top:16px;color:#333;">测试步骤截图</h3>
+            <div class="screenshots">{imgs}</div>
+        </div>'''
 
-    # 用例 2：变量短信发送
-    case2_result = test_results['cases'].get('testcases/test_web.py::test_send_variable_sms', {})
-    case2_passed = case2_result.get('passed', False)
-    html_content += f'''
-        <div class="case-section">
-            <h2>用例 2：变量短信发送 <span class="case-result {'pass' if case2_passed else 'fail'}">{'PASSED' if case2_passed else 'FAILED'}</span></h2>
-            <table class="info-table">
-                <tr><th>测试说明</th><td>导入文件，发送变量内容的短信</td></tr>
-                <tr><th>测试结果</th><td class="{'status-pass' if case2_passed else 'status-fail'}">{'✅ 通过' if case2_passed else '❌ 失败'}</td></tr>
-            </table>
-            <h3 style="margin-top: 20px; color: #333;">测试步骤截图</h3>
-            <div class="screenshots">
-'''
-    for filename, title in screenshot_files_variable:
-        if filename in screenshots_variable:
-            html_content += f'''
-                <div class="screenshot-card">
-                    <h3>{title}</h3>
-                    <img src="{screenshots_variable[filename]}" alt="{filename}">
-                </div>
-'''
-    html_content += '''
-            </div>
-        </div>
+    html_content += _case_section(
+        "用例 1：签名与模板创建",
+        "testcases/test_web.py::test_signature_and_template",
+        "新建签名 → 提交审核 → 删除签名；新建模板 → 提交审核 → 删除模板",
+        screenshots_sig_tmpl, sig_tmpl_files
+    )
+    html_content += _case_section(
+        "用例 2：固定短信发送",
+        "testcases/test_web.py::test_send_constant_sms",
+        "手动添加手机号，发送固定内容的短信",
+        screenshots_constant, screenshot_files_constant
+    )
+    html_content += _case_section(
+        "用例 3：变量短信发送",
+        "testcases/test_web.py::test_send_variable_sms",
+        "导入文件，发送变量内容的短信",
+        screenshots_variable, screenshot_files_variable
+    )
 
+    html_content += '''
         <div class="footer">
             <p>Generated by Playwright Automation Test</p>
         </div>
