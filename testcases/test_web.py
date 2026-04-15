@@ -14,6 +14,7 @@ class TestWeb():
     REPORT_DIR = os.path.join(PROJECT_ROOT, "report")
     TOKEN_FILE = os.path.join(PROJECT_ROOT, "utils", "token.json")
 
+
 def test_signature_and_template(browser_context, env_config):
     page = browser_context
     sd = TestWeb.SCREENSHOT_DIR
@@ -36,20 +37,16 @@ def test_signature_and_template(browser_context, env_config):
     page.get_by_role("combobox", name="* 行业选择").click()
     page.get_by_text("网络游戏").click()
 
-
     # 步骤5：点击"签名类型"下拉框，选择"企业名称"
     page.get_by_role("combobox", name="* 签名类型").click()
     page.get_by_text("企业名称").click()
 
-
     # 步骤6：选择"他用"单选按钮（force=True 绕过遮挡层）
     page.get_by_role("radio", name="他用(签名为他人实名认证的企业事业单位、APP、商标等)").check()
-
 
     # 步骤7：点击"APP/官网链接"输入框并填写链接（填"1"占位）
     page.get_by_role("textbox", name="* APP/官网链接").click()
     page.get_by_role("textbox", name="* APP/官网链接").fill("1")
-
 
     # 步骤8：点击"终端客户信息"下拉框
     page.get_by_role("combobox", name="* 终端客户信息").click()
@@ -76,32 +73,6 @@ def test_signature_and_template(browser_context, env_config):
     page.screenshot(path=os.path.join(sd, "submit_success.png"))
     page.get_by_role("button", name="我知道了").click()
 
-    # # 步骤11：智能运营后台 - 打开新标签页审核签名
-    # page2 = page.context.new_page()
-    # page2.goto(f"{env_config['smart_audit_signature_url']}")
-    # page2.screenshot(path=os.path.join(sd, "s11_smart_audit_page.png"))
-    #
-    # # 步骤12：搜索签名
-    # page2.get_by_role("textbox", name="请输入签名搜索").click()
-    # page2.get_by_role("textbox", name="请输入签名搜索").fill(f"{env_config['signature']}")
-    # page2.get_by_role("button", name="搜 索").click()
-    # page2.wait_for_timeout(2000)
-    # page2.screenshot(path=os.path.join(sd, "s12_smart_search_result.png"))
-    #
-    # # 步骤13：驳回签名
-    # page2.get_by_text("驳回", exact=True).click()
-    # page2.get_by_text("测试驳回", exact=True).click()
-    # page2.screenshot(path=os.path.join(sd, "s13_smart_reject_dialog.png"))
-    # page2.get_by_role("button", name="确 认").click()
-    # page2.get_by_role("button", name="确 认").click()
-    # page2.wait_for_timeout(2000)
-    # page2.screenshot(path=os.path.join(sd, "s14_smart_reject_done.png"))
-    #
-    # # 步骤14：切回自助通页面，搜索并删除被驳回的签名
-    # page.bring_to_front()
-    # page.wait_for_timeout(2000)
-    # page.screenshot(path=os.path.join(sd, "s15_back_to_signature_page.png"))
-
     # 步骤15：在搜索框中输入签名名称并点击"搜 索"，等待结果加载后截图
     page.get_by_role("textbox", name="请输入搜索关键词").click()
     page.get_by_role("textbox", name="请输入搜索关键词").fill(f"{env_config['signature']}")
@@ -111,7 +82,6 @@ def test_signature_and_template(browser_context, env_config):
     expect(page.get_by_text(env_config['signature'])).to_be_visible(timeout=10000)
 
     # 步骤16：点击列表中第一个"删除"链接，弹出确认对话框后确认删除
-
     page.wait_for_timeout(2000)
     page.screenshot(path=os.path.join(sd, "sig_after_search.png"))
     page.get_by_text("删除").first.click()
@@ -180,6 +150,7 @@ def test_signature_and_template(browser_context, env_config):
     # 截图：删除成功 toast 提示
     page.screenshot(path=os.path.join(sd, "tmpl_delete_result.png"))
 
+
 def test_send_constant_sms(browser_context, env_config):
     page = browser_context
     page.goto(f"{env_config['constant_send_url']}")
@@ -204,26 +175,6 @@ def test_send_constant_sms(browser_context, env_config):
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_success.png"))
     # 验证发送成功
     expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
-
-    # page.wait_for_timeout(120000)
-    # page.goto(f"{env_config['send_records_url']}")
-    # # 等待页面加载
-    # page.wait_for_timeout(3000)
-    # # 获取期望的模板内容（带签名的完整内容）
-    # expected_content = f"{env_config['assert_constant_template']}"
-    # # 断言 1：验证发送内容与模板内容一致
-    # # 在表格中查找包含期望内容的单元格
-    # page.wait_for_selector(f'text={expected_content[:20]}', timeout=10000)
-    # content_cell = page.locator(f'td:has-text("{expected_content}")').first
-    # assert content_cell.count() > 0, f"发送记录中未找到期望的内容：{expected_content}"
-    # # 断言 2：验证状态码为 DELIVRD
-    # # 查找同一行中的状态码（DELIVRD）
-    # status_cell = page.locator('td:has-text("DELIVRD")').first
-    # assert status_cell.count() > 0, "发送记录中未找到状态码 DELIVRD"
-    # page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c4_assert.png"))
-    # print(f"\n[OK] 断言通过：发送内容包含 '{expected_content[:30]}...'，状态码为 DELIVRD")
-
-
 
 
 def test_send_variable_sms(browser_context, env_config):
@@ -261,25 +212,6 @@ def test_send_variable_sms(browser_context, env_config):
     page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_success.png"))
     # 验证发送成功
     expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
-
-    # page.wait_for_timeout(120000)
-    # page.goto(f"{env_config['send_records_url']}")
-    # # 等待页面加载
-    # page.wait_for_timeout(3000)
-    # # 获取期望的模板内容（带签名的完整内容）
-    # expected_content = f"{env_config['assert_variable_template']}"
-    # # 断言 1：验证发送内容与模板内容一致
-    # # 在表格中查找包含期望内容的单元格
-    # page.wait_for_selector(f'text={expected_content[:20]}', timeout=10000)
-    # content_cell = page.locator(f'td:has-text("{expected_content}")').first
-    # assert content_cell.count() > 0, f"发送记录中未找到期望的内容：{expected_content}"
-    # # 断言 2：验证状态码为 DELIVRD
-    # # 查找同一行中的状态码（DELIVRD）
-    # status_cell = page.locator('td:has-text("DELIVRD")').first
-    # assert status_cell.count() > 0, "发送记录中未找到状态码 DELIVRD"
-    # page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "v5_assert.png"))
-    # print(f"\n[OK] 断言通过：发送内容包含 '{expected_content[:30]}...'，状态码为 DELIVRD")
-
 
 
 def _load_screenshots(file_list):
@@ -325,36 +257,36 @@ def generate_html_report(test_results):
 
     # 签名+模板用例截图（按测试代码中的实际文件名）
     sig_tmpl_files = [
-        ("fill_name.png",                "步骤1 填写签名名称"),
-        ("select_customer.png",          "步骤2 选择终端客户"),
-        ("upload_auth.png",              "步骤3 上传签名授权书"),
-        ("submit_success.png",           "步骤4 签名提交成功"),
-        ("sig_after_search.png",         "步骤5 搜索签名结果"),
-        ("sig_delete_result.png",        "步骤6 删除签名成功"),
-        ("new_template_form.png",        "步骤7 新建模板表单"),
-        ("submit_template_success.png",  "步骤8 模板提交成功"),
-        ("tmpl_after_search.png",        "步骤9 搜索模板结果"),
-        ("tmpl_delete_result.png",       "步骤10 删除模板成功"),
+        ("fill_name.png", "步骤1 填写签名名称"),
+        ("select_customer.png", "步骤2 选择终端客户"),
+        ("upload_auth.png", "步骤3 上传签名授权书"),
+        ("submit_success.png", "步骤4 签名提交成功"),
+        ("sig_after_search.png", "步骤5 搜索签名结果"),
+        ("sig_delete_result.png", "步骤6 删除签名成功"),
+        ("new_template_form.png", "步骤7 新建模板表单"),
+        ("submit_template_success.png", "步骤8 模板提交成功"),
+        ("tmpl_after_search.png", "步骤9 搜索模板结果"),
+        ("tmpl_delete_result.png", "步骤10 删除模板成功"),
     ]
 
     # 固定短信截图
     screenshot_files_constant = [
-        ("c1_home.png",       "首页"),
+        ("c1_home.png", "首页"),
         ("c1_add_number.png", "添加手机号"),
-        ("c1_success.png",    "发送成功"),
+        ("c1_success.png", "发送成功"),
     ]
 
     # 变量短信截图
     screenshot_files_variable = [
-        ("c2_home.png",          "首页"),
+        ("c2_home.png", "首页"),
         ("c2_import_dialog.png", "导入文件对话框"),
-        ("c2_uploaded.png",      "文件上传完成"),
-        ("c2_success.png",       "发送成功"),
+        ("c2_uploaded.png", "文件上传完成"),
+        ("c2_success.png", "发送成功"),
     ]
 
     overall_cls = 'success' if test_results['passed'] else 'fail'
     overall_txt = 'PASSED' if test_results['passed'] else 'FAILED'
-    token_txt   = '已使用保存的 token 免登录' if test_results['use_token'] else '未检测到 token'
+    token_txt = '已使用保存的 token 免登录' if test_results['use_token'] else '未检测到 token'
 
     # 构建用例数据
     case_configs = []
@@ -622,6 +554,7 @@ if __name__ == "__main__":
 
     # 读取配置中的 URL
     import yaml
+
     with open('C:\\Users\\15274\\PycharmProjects\\playwright_test\\config\\config.yml', 'r', encoding='utf-8') as f:
         _cfg = yaml.safe_load(f)
     _env = os.getenv("prod", "prod")
