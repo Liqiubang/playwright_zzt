@@ -1,5 +1,14 @@
-import re
+"""
+test_web.py - Web 端 E2E 自动化测试用例
 
+本模块包含：
+- 固定短信群发测试 (test_send_constant_sms)
+- 变量短信群发测试 (test_send_variable_sms)
+- HTML 测试报告生成 (generate_html_report)
+- 已注释的签名与模板管理测试用例（保留备用）
+"""
+
+import re
 import pytest
 import json
 import os
@@ -8,12 +17,18 @@ from datetime import datetime
 from playwright.sync_api import Page, expect
 
 
-class TestWeb():
+class TestWeb:
+    """测试项目的全局常量定义（与 conftest.py 中保持一致）"""
+
     PROJECT_ROOT = r"C:\Users\15274\PycharmProjects\playwright_test"
     SCREENSHOT_DIR = os.path.join(PROJECT_ROOT, "screenshot")
     REPORT_DIR = os.path.join(PROJECT_ROOT, "report")
     TOKEN_FILE = os.path.join(PROJECT_ROOT, "utils", "token.json")
 
+
+# ==============================================================================
+# 测试用例
+# ==============================================================================
 
 def test_signature_and_template(browser_context, env_config):
     page = browser_context
@@ -152,70 +167,110 @@ def test_signature_and_template(browser_context, env_config):
 
 
 def test_send_constant_sms(browser_context, env_config):
+    """测试固定短信群发功能
+
+    流程：打开发送页面 -> 手动添加手机号 -> 选择模板 -> 提交群发任务 -> 立即发送
+    断言：页面出现"已经成功提交发送"提示
+    """
     page = browser_context
+    sd = TestWeb.SCREENSHOT_DIR
+
+    # 打开固定短信发送页面
     page.goto(f"{env_config['constant_send_url']}")
-    # 截图：首页
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_home.png"))
+    page.screenshot(path=os.path.join(sd, "c1_home.png"))
+
+    # 进入短信群发功能
     page.get_by_role("link", name="短信发送", exact=True).click()
     page.get_by_role("button", name="短信群发").click()
+
+    # 手动添加手机号
     page.get_by_role("button", name="手动添加").click()
     page.get_by_role("dialog", name="手动添加").get_by_role("textbox").fill(f"{env_config['phone']}")
     page.get_by_role("button", name="确 定").click()
-    # 截图：添加号码后
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_add_number.png"))
+    page.screenshot(path=os.path.join(sd, "c1_add_number.png"))
+
+    # 选择短信模板
     page.locator("#onlinesendForm").get_by_text("选择模板").click()
     page.get_by_role("textbox", name="模板内容 :").click()
     page.get_by_role("textbox", name="模板内容 :").fill(f"{env_config['constant_template']}")
     page.get_by_role("button", name="查 询").click()
-    # 使用更精确的选择器，定位到表格中的"选择"按钮
     page.locator("table tbody tr a").filter(has_text="选择").first.click()
+
+    # 提交群发任务并立即发送
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
-    # 截图：发送成功
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c1_success.png"))
-    # 验证发送成功
-    expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
+    page.screenshot(path=os.path.join(sd, "c1_success.png"))
+
+    # 断言：验证发送成功
+    expect(
+        page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")
+    ).to_be_visible()
 
 
 def test_send_variable_sms(browser_context, env_config):
+    """测试变量短信群发功能
+
+    流程：打开发送页面 -> 选择模板 -> 导入变量文件 -> 提交群发任务 -> 立即发送
+    断言：页面出现"已经成功提交发送"提示
+    """
     page = browser_context
+    sd = TestWeb.SCREENSHOT_DIR
+
+    # 打开变量短信发送页面
     page.goto(f"{env_config['variable_send_url']}")
-    # 截图：首页
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_home.png"))
+    page.screenshot(path=os.path.join(sd, "c2_home.png"))
+
+    # 进入变量短信群发功能
     page.get_by_role("link", name="变量短信发送", exact=True).click()
     page.get_by_role("button", name="短信群发").click()
+
+    # 选择短信模板
     page.locator("#onlinesendForm").get_by_text("选择模板").click()
     page.get_by_role("textbox", name="模板内容 :").click()
     page.get_by_role("textbox", name="模板内容 :").fill(f"{env_config['variable_template']}")
     page.get_by_role("button", name="查 询").click()
-    # 使用更精确的选择器，定位到表格中的"选择"按钮
     page.locator("table tbody tr a").filter(has_text="选择").first.click()
+
+    # 导入变量内容文件
     page.get_by_role("button", name="导入变量内容").click()
-    # 截图：导入文件对话框
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_import_dialog.png"))
-    # 使用 file chooser 来上传本地文件
-    # 先点击上传区域触发文件选择器
+    page.screenshot(path=os.path.join(sd, "c2_import_dialog.png"))
+
+    # 通过 file chooser 上传本地文件
     with page.expect_file_chooser() as fc_info:
         page.get_by_role("heading", name="点击或将文件拖拽到这里上传").click()
     file_chooser = fc_info.value
-    # 设置要上传的本地文件路径（使用绝对路径）
-    local_file_path = os.path.abspath("C:\\Users\\15274\\OneDrive\\guoneibianliang.txt")
+    local_file_path = os.path.abspath(r"C:\Users\15274\OneDrive\guoneibianliang.txt")
     print(f"\n[INFO] 上传文件路径：{local_file_path}")
-    # 设置文件
     file_chooser.set_files(local_file_path)
+
+    # 开始上传并等待完成
     page.get_by_role("button", name="开始上传").click()
-    # 截图：上传完成
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_uploaded.png"))
+    page.screenshot(path=os.path.join(sd, "c2_uploaded.png"))
+
+    # 提交群发任务并立即发送
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
-    # 截图：发送成功
-    page.screenshot(path=os.path.join(TestWeb.SCREENSHOT_DIR, "c2_success.png"))
-    # 验证发送成功
-    expect(page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")).to_be_visible()
+    page.screenshot(path=os.path.join(sd, "c2_success.png"))
 
+    # 断言：验证发送成功
+    expect(
+        page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")
+    ).to_be_visible()
+
+
+# ==============================================================================
+# HTML 报告生成
+# ==============================================================================
 
 def _load_screenshots(file_list):
-    """读取截图列表并转为 base64 字典"""
+    """读取截图列表并转为 base64 编码的字典
+
+    Args:
+        file_list: [(文件名, 标题), ...] 格式的截图信息列表
+
+    Returns:
+        dict: {文件名: base64 data URI} 的映射
+    """
     result = {}
     for filename, _ in file_list:
         filepath = os.path.join(TestWeb.SCREENSHOT_DIR, filename)
@@ -226,7 +281,15 @@ def _load_screenshots(file_list):
 
 
 def _render_screenshots(screenshots, file_list):
-    """生成截图卡片 HTML"""
+    """生成截图卡片的 HTML 片段
+
+    Args:
+        screenshots: {文件名: base64 data URI} 的映射
+        file_list: [(文件名, 标题), ...] 格式的截图信息列表
+
+    Returns:
+        str: 截图卡片 HTML
+    """
     html = ""
     for filename, title in file_list:
         if filename in screenshots:
@@ -239,12 +302,25 @@ def _render_screenshots(screenshots, file_list):
 
 
 def generate_html_report(test_results):
-    """生成 HTML 测试报告"""
+    """生成 HTML 格式的测试报告
 
+    根据测试结果和截图文件，生成包含统计概要、用例详情、
+    步骤截图的可视化 HTML 报告。
+
+    Args:
+        test_results: 包含以下字段的字典：
+            - total: 总用例数
+            - passed_count: 通过数
+            - failed_count: 失败数
+            - passed: 是否全部通过
+            - timestamp: 测试时间
+            - use_token: 是否使用 token 免登录
+            - cases: 各用例结果
+    """
     os.makedirs(TestWeb.REPORT_DIR, exist_ok=True)
     sd = TestWeb.SCREENSHOT_DIR
 
-    # 收集 screenshot 目录下所有实际存在的截图
+    # 收集 screenshot 目录下所有实际存在的截图，转为 base64
     all_screenshots = {}
     if os.path.isdir(sd):
         for fname in sorted(os.listdir(sd)):
@@ -255,7 +331,9 @@ def generate_html_report(test_results):
                     mime = 'image/png' if ext == 'png' else 'image/jpeg'
                     all_screenshots[fname] = f"data:{mime};base64,{base64.b64encode(f.read()).decode()}"
 
-    # 签名+模板用例截图（按测试代码中的实际文件名）
+    # ---- 各用例对应的截图文件列表 ----
+
+    # 签名+模板用例截图
     sig_tmpl_files = [
         ("fill_name.png", "步骤1 填写签名名称"),
         ("select_customer.png", "步骤2 选择终端客户"),
@@ -269,14 +347,14 @@ def generate_html_report(test_results):
         ("tmpl_delete_result.png", "步骤10 删除模板成功"),
     ]
 
-    # 固定短信截图
+    # 固定短信用例截图
     screenshot_files_constant = [
         ("c1_home.png", "首页"),
         ("c1_add_number.png", "添加手机号"),
         ("c1_success.png", "发送成功"),
     ]
 
-    # 变量短信截图
+    # 变量短信用例截图
     screenshot_files_variable = [
         ("c2_home.png", "首页"),
         ("c2_import_dialog.png", "导入文件对话框"),
@@ -284,11 +362,14 @@ def generate_html_report(test_results):
         ("c2_success.png", "发送成功"),
     ]
 
+    # ---- 报告概要信息 ----
+
     overall_cls = 'success' if test_results['passed'] else 'fail'
     overall_txt = 'PASSED' if test_results['passed'] else 'FAILED'
     token_txt = '已使用保存的 token 免登录' if test_results['use_token'] else '未检测到 token'
 
-    # 构建用例数据
+    # ---- 构建用例配置 ----
+
     case_configs = []
     sig_case = {
         "title": "签名与模板创建",
@@ -314,7 +395,8 @@ def generate_html_report(test_results):
         if c["nodeid"] in test_results["cases"]:
             case_configs.append(c)
 
-    # 生成用例 HTML
+    # ---- 生成用例 HTML 片段 ----
+
     cases_html = ""
     for idx, c in enumerate(case_configs, 1):
         r = test_results['cases'].get(c['nodeid'], {})
@@ -324,7 +406,7 @@ def generate_html_report(test_results):
         result_cls = 'result-pass' if p else 'result-fail'
         result_txt = '通过' if p else '失败'
 
-        # 截图卡片
+        # 生成截图卡片
         imgs_html = ""
         for fname, title in c["files"]:
             if fname in all_screenshots:
@@ -348,6 +430,8 @@ def generate_html_report(test_results):
             <div class="screenshots-title">测试步骤截图</div>
             <div class="screenshots-grid">{imgs_html if imgs_html else '<p style="color:#999;padding:12px;">暂无截图</p>'}</div>
         </div>'''
+
+    # ---- 组装完整 HTML ----
 
     html_content = f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -523,6 +607,7 @@ def generate_html_report(test_results):
 </html>
 '''
 
+    # 写入报告文件
     report_path = os.path.join(TestWeb.REPORT_DIR, "test_report.html")
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -530,6 +615,10 @@ def generate_html_report(test_results):
     print(f"\n[OK] HTML 测试报告已生成：{report_path}")
     return report_path
 
+
+# ==============================================================================
+# 独立运行入口
+# ==============================================================================
 
 if __name__ == "__main__":
     import sys
@@ -552,15 +641,16 @@ if __name__ == "__main__":
         f"--json-report-file={json_report_path}"
     ])
 
-    # 读取配置中的 URL
+    # 读取环境配置
     import yaml
 
-    with open('C:\\Users\\15274\\PycharmProjects\\playwright_test\\config\\config.yml', 'r', encoding='utf-8') as f:
+    config_path = r"C:\Users\15274\PycharmProjects\playwright_test\config\config.yml"
+    with open(config_path, 'r', encoding='utf-8') as f:
         _cfg = yaml.safe_load(f)
     _env = os.getenv("prod", "prod")
     _env_cfg = _cfg["environments"][_env]
 
-    # 读取 JSON 报告
+    # 构建测试结果数据
     test_results = {
         "total": 2,
         "passed_count": 0,
@@ -573,12 +663,13 @@ if __name__ == "__main__":
         "cases": {}
     }
 
+    # 解析 JSON 报告，提取各用例结果
     if os.path.exists(json_report_path):
         with open(json_report_path, "r", encoding="utf-8") as f:
             report_data = json.load(f)
             for test in report_data.get("tests", []):
                 test_name = test.get("nodeid", "")
-                status = test.get("outcome", "failed")  # JSON 报告中使用 outcome 字段
+                status = test.get("outcome", "failed")
                 test_results["cases"][test_name] = {"passed": status == "passed"}
                 if status == "passed":
                     test_results["passed_count"] += 1
