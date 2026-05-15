@@ -66,7 +66,7 @@ def browser_context():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=False,
-            slow_mo=1000,
+            slow_mo=1500,
             args=['--start-maximized']
         )
 
@@ -110,6 +110,7 @@ def env_config():
         dict: 当前环境的配置字典
     """
     env = os.getenv("prod", "prod")
+    # env = os.getenv("sit", "sit")
     config = load_config()
     return config["environments"][env]
 
@@ -153,9 +154,10 @@ def pytest_sessionfinish(session, exitstatus):
     汇总所有用例的执行结果，调用 test_web 模块中的
     generate_html_report() 生成可视化报告。
     """
-    from testcases.test_web import generate_html_report
+    from testcases.report_helper import generate_html_report
 
     config = load_config()
+    # env = os.getenv("sit", "sit")
     env = os.getenv("prod", "prod")
     env_cfg = config["environments"][env]
 
