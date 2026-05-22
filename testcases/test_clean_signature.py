@@ -17,31 +17,40 @@ def test_clean_signature(browser_context, env_config):
     # 智能运营删除签名
     new_page = page.context.new_page()
     new_page.bring_to_front()
-    new_page.goto("https://smart-operation.new253.com/child-risk/review/sign-apply")
+    new_page.goto(f"{env_config['smart_audit_signature_url']}")
+    # 筛选状态为"审核通过"的签名
     new_page.locator(".smart-risk-select-selector").first.click()
-    new_page.get_by_text("审核通过").click()
+    new_page.get_by_text("审核通过", exact=True).click()
+    # 搜索目标签名
     new_page.get_by_role("textbox", name="请输入签名搜索").click()
-    new_page.get_by_role("textbox", name="请输入签名搜索").fill("prod自动化测试签名")
+    new_page.get_by_role("textbox", name="请输入签名搜索").fill(f"{env_config['signature']}")
     new_page.get_by_role("button", name="搜 索").click()
+    # 删除并确认
     new_page.get_by_text("删除", exact=True).first.click()
     new_page.get_by_role("button", name="确 认").click()
 
     # 智能运营删除签名子端口
-    new_page.goto("https://smart-operation.new253.com/child-resource/pass-support/subport")
+    new_page.goto(f"{env_config['smart_signature_subport_url']}")
+    # 等待页面加载完成
     new_page.wait_for_timeout(3000)
+    # 搜索目标签名的子端口记录
     new_page.get_by_role("textbox").first.click()
-    new_page.get_by_role("textbox").first.fill("prod自动化测试签名")
+    new_page.get_by_role("textbox").first.fill(f"{env_config['signature']}")
     new_page.get_by_role("button", name="搜 索").click()
     new_page.wait_for_timeout(2000)
+    # 切换每页显示 100 条，确保全选时覆盖所有记录
     new_page.get_by_text("条/页").click()
     new_page.get_by_text("100 条/页").click()
-    new_page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tmpl_delete_subport.png"))
+    # 全选所有记录
     new_page.get_by_role("checkbox", name="Select all").check()
+    # 批量停用
     new_page.get_by_role("button", name="批量停用").click()
     new_page.wait_for_timeout(1000)
+    # 停用原因选择"测试"
     new_page.get_by_role("dialog").get_by_text("测试", exact=True).click()
     new_page.get_by_role("button", name="确 认").click()
     new_page.get_by_role("button", name="确 定").click()
+    new_page.screenshot(path=os.path.join(SCREENSHOT_DIR, "sig_delete_subport.png"))
 
 
 

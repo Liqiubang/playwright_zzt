@@ -73,7 +73,7 @@ def generate_html_report(test_results):
     ]
 
     screenshot_clean_signature = [
-        ("tmpl_delete_subport.png", "子端口列表"),
+        ("sig_delete_subport.png", "子端口列表"),
     ]
 
     # ---- 报告概要信息 ----

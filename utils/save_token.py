@@ -6,6 +6,7 @@ save_token.py - 登录 Token 获取与保存工具
 采用增量更新机制，不会覆盖已有的其他站点 token。
 
 使用方式：直接运行本脚本，按提示选择要保存 token 的网站。
+脚本会自动检测登录跳转完成（URL 离开登录页），登录成功后自动保存 token 并关闭浏览器。
 """
 
 import json
@@ -20,14 +21,14 @@ SITES = {
     "1": {
         "key": "cloudsit",
         "name": "创蓝云智客户平台",
-        # "login_url": "https://cloudsit.cm253.com/control/login"
-        "login_url": "https://www.chuanglan.com/control/login"
+        "login_url": "https://cloudsit.cm253.com/control/login"
+        # "login_url": "https://www.chuanglan.com/control/login"
     },
     "2": {
         "key": "smart_operation",
         "name": "智能运营后台",
-        # "login_url": "smart-operation-sit.cm253.com/login"
-        "login_url": "https://smart-operation.new253.com/login"
+        "login_url": "http://smart-operation-sit.cm253.com/login"
+        # "login_url": "https://smart-operation.new253.com/login"
     }
 }
 
@@ -74,10 +75,19 @@ def save_site_token(site_key, site_name, login_url):
         page.goto(login_url)
         page.wait_for_timeout(2000)
 
-        # 等待用户手动登录（20 秒超时）
+        # 等待用户手动登录：通过监听 URL 跳转离开登录页判断登录成功
         print("请在浏览器中手动输入账号密码并登录...")
-        print("您有20秒的输入时间，脚本会自动保存 token 并关闭浏览器")
-        page.wait_for_timeout(20000)
+        print("脚本会自动检测登录成功，保存 token 后关闭浏览器（最长等待 5 分钟）")
+        try:
+            page.wait_for_url(
+                lambda url: "login" not in url.lower(),
+                timeout=300000
+            )
+            # 登录跳转完成后稍等页面加载，确保 cookie 已写入
+            page.wait_for_timeout(3000)
+            print("[OK] 检测到登录成功")
+        except Exception as e:
+            print(f"[WARN] 等待登录超时或失败：{e}")
 
         # 获取登录后的 cookies
         cookies = context.cookies()

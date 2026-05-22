@@ -66,7 +66,7 @@ def browser_context():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=False,
-            slow_mo=1500,
+            slow_mo=1000,
             args=['--start-maximized']
         )
 
@@ -109,8 +109,8 @@ def env_config():
     Returns:
         dict: 当前环境的配置字典
     """
-    env = os.getenv("prod", "prod")
-    # env = os.getenv("sit", "sit")
+    # env = os.getenv("prod", "prod")
+    env = os.getenv("sit", "sit")
     config = load_config()
     return config["environments"][env]
 
@@ -157,8 +157,8 @@ def pytest_sessionfinish(session, exitstatus):
     from testcases.report_helper import generate_html_report
 
     config = load_config()
-    # env = os.getenv("sit", "sit")
-    env = os.getenv("prod", "prod")
+    env = os.getenv("sit", "sit")
+    # env = os.getenv("prod", "prod")
     env_cfg = config["environments"][env]
 
     # 统计通过/失败数量
