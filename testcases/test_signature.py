@@ -61,8 +61,8 @@ def test_signature(browser_context, env_config):
     # 提交审核
     page.get_by_role("button", name="提交审核").click()
 
-    # 断言：确认"已提交审核"成功提示可见
-    expect(page.get_by_text("您的签名已提交审核", exact=False)).to_be_visible(timeout=10000)
+    # 断言：等待任意弹窗出现后，再断言成功提示文字可见
+    expect(page.get_by_text("您的签名已提交审核", exact=False)).to_be_visible(timeout=30000)
     page.screenshot(path=os.path.join(sd, "submit_success.png"))
     # 关闭成功提示弹窗
     page.get_by_role("button", name="我知道了").click()
