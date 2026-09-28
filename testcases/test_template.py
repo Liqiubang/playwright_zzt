@@ -23,6 +23,7 @@ def test_template(browser_context, env_config):
     page.get_by_role("paragraph").filter(has_text="请输入模版内容，点击{x}后插入变量").click()
     page.get_by_role("paragraph").filter(has_text="请输入模版内容，点击{x}后插入变量").click()
     page.get_by_role("textbox").filter(has_text="请输入模版内容，点击{x}后插入变量").fill(f"{env_config['constant_template']}")
+    page.screenshot(path=os.path.join(sd, "constant_template.png"))
     page.get_by_role("button", name="提交审核").click()
     page.get_by_role("button", name="我知道了").click()
 
@@ -34,9 +35,12 @@ def test_template(browser_context, env_config):
     new_page.get_by_role("textbox", name="模板内容").click()
     new_page.get_by_role("textbox", name="模板内容").fill(f"{env_config['constant_template']}")
     new_page.get_by_role("button", name="搜 索").click()
+
     # 审核通过
     new_page.get_by_text("通过", exact=True).first.click()
+    new_page.screenshot(path=os.path.join(sd, "audit_constant_template.png"))
     new_page.get_by_role("button", name="确 认").click()
+
 
 
     # ===== 新建变量模板 =====
@@ -55,6 +59,7 @@ def test_template(browser_context, env_config):
     length_input.wait_for(state="visible", timeout=5000)
     length_input.click()
     length_input.fill("10")
+    page.screenshot(path=os.path.join(sd, "variable_template.png"))
     page.get_by_role("button", name="提交审核").click()
     page.get_by_role("button", name="我知道了").click()
 
@@ -66,8 +71,12 @@ def test_template(browser_context, env_config):
     new_page.get_by_role("textbox", name="模板内容").click()
     new_page.get_by_role("textbox", name="模板内容").fill(f"{env_config['variable_template']}")
     new_page.get_by_role("button", name="搜 索").click()
+
     # 审核通过
     new_page.get_by_text("通过", exact=True).first.click()
+    new_page.screenshot(path=os.path.join(sd, "audit_variable_template.png"))
     new_page.get_by_role("button", name="确 认").click()
+
+
     # 切换回原标签页
     page.bring_to_front()

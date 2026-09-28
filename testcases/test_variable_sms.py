@@ -47,7 +47,8 @@ def test_send_variable_sms(browser_context, env_config):
     page.screenshot(path=os.path.join(sd, "c2_submit_dialog.png"))
     page.get_by_role("button", name="立即发送").click()
     page.wait_for_timeout(3000)
-    page.screenshot(path=os.path.join(sd, "c2_success.png"))
+
     # 断言：验证发送成功（变量短信需处理文件，弹窗出现较慢，延长等待时间）
     expect(page.locator(".ant-modal-confirm-title", has_text="已经成功提交发送")).to_be_visible(timeout=15000)
+    page.screenshot(path=os.path.join(sd, "c2_success.png"))
 

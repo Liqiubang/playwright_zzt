@@ -28,6 +28,10 @@ def test_clean_signature(browser_context, env_config):
     # 删除并确认
     new_page.get_by_text("删除", exact=True).first.click()
     new_page.get_by_role("button", name="确 认").click()
+    new_page.wait_for_timeout(2000)
+    new_page.screenshot(path=os.path.join(SCREENSHOT_DIR, "sig_delete_result.png"))
+    # 断言：确认删除成功提示可见（页面提示为"删除成功"）
+    expect(new_page.get_by_text("删除成功", exact=True)).to_be_visible(timeout=30000)
 
     # 智能运营删除签名子端口
     new_page.goto(f"{env_config['smart_signature_subport_url']}")

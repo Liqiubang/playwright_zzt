@@ -49,10 +49,10 @@ def generate_html_report(test_results):
     ]
 
     screenshot_template = [
-        ("new_template_form.png", "新建常量模板表单"),
-        ("submit_template_success.png", "常量模板提交成功"),
-        ("new_var_template_form.png", "新建变量模板表单"),
-        ("submit_var_template_success.png", "变量模板提交成功"),
+        ("constant_template.png", "新建常量模板表单"),
+        ("audit_constant_template.png", "审核通过常量模板"),
+        ("variable_template.png", "新建变量模板表单"),
+        ("audit_variable_template.png", "审核通过变量模板"),
     ]
 
     screenshot_constant_sms = [
@@ -65,14 +65,17 @@ def generate_html_report(test_results):
         ("c2_home.png", "首页"),
         ("c2_import_dialog.png", "导入文件对话框"),
         ("c2_uploaded.png", "文件上传完成"),
+        ("c2_submit_dialog.png", "提交确认弹窗"),
         ("c2_success.png", "发送成功"),
     ]
 
     screenshot_clean_template = [
+        ("tmpl_result.png", "模板搜索结果"),
         ("tmpl_delete_result.png", "删除模板成功"),
     ]
 
     screenshot_clean_signature = [
+        ("sig_delete_result.png", "删除签名成功"),
         ("sig_delete_subport.png", "子端口列表"),
     ]
 

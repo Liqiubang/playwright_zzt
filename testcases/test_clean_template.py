@@ -30,6 +30,7 @@ def test_clean_template(browser_context, env_config):
     page.get_by_role("button", name="搜 索").click()
     # 等待搜索结果加载
     page.wait_for_timeout(2000)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tmpl_result.png"))
     # 全选当前页所有模板
     page.get_by_role("checkbox").first.check()
     # 批量删除

@@ -36,7 +36,8 @@ def test_send_constant_sms(browser_context, env_config):
     # 提交群发任务并立即发送
     page.get_by_role("button", name="提交短信群发任务").click()
     page.get_by_role("button", name="立即发送").click()
-    page.screenshot(path=os.path.join(sd, "c1_success.png"))
+
 
     # 断言：验证发送成功（.ant-modal-title 存在隐藏残留节点，改用确认弹窗标题定位）
     expect(page.locator(".ant-modal-confirm-title", has_text="已经成功提交发送")).to_be_visible(timeout=15000)
+    page.screenshot(path=os.path.join(sd, "c1_success.png"))
