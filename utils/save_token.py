@@ -21,13 +21,15 @@ SITES = {
     "1": {
         "key": "cloudsit",
         "name": "创蓝云智客户平台",
-        "login_url": "https://cloudsit.cm253.com/control/login"
+        "login_url": "http://172.16.41.223:9999/new-control/login"
+        # "login_url": "https://cloudsit.cm253.com/control/login"
         # "login_url": "https://www.chuanglan.com/control/login"
     },
     "2": {
         "key": "smart_operation",
         "name": "智能运营后台",
-        "login_url": "http://smart-operation-sit.cm253.com/login"
+        "login_url": "http://smart-operation-dev.cm253.com/login"
+        # "login_url": "http://smart-operation-sit.cm253.com/login"
         # "login_url": "https://smart-operation.new253.com/login"
     }
 }

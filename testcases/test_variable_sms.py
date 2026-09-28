@@ -20,12 +20,8 @@ def test_send_variable_sms(browser_context, env_config):
     page.goto(f"{env_config['variable_send_url']}")
     page.screenshot(path=os.path.join(sd, "c2_home.png"))
 
-    # 进入变量短信群发功能
-    page.get_by_role("link", name="变量短信发送", exact=True).click()
-    page.get_by_role("button", name="短信群发").click()
-
     # 选择短信模板
-    page.locator("#onlinesendForm").get_by_text("选择模板").click()
+    page.get_by_text("选择模板").click()
     page.get_by_role("textbox", name="模板内容 :").click()
     page.get_by_role("textbox", name="模板内容 :").fill(f"{env_config['variable_template']}")
     page.get_by_role("button", name="查 询").click()
@@ -48,10 +44,10 @@ def test_send_variable_sms(browser_context, env_config):
 
     # 提交群发任务并立即发送
     page.get_by_role("button", name="提交短信群发任务").click()
+    page.screenshot(path=os.path.join(sd, "c2_submit_dialog.png"))
     page.get_by_role("button", name="立即发送").click()
+    page.wait_for_timeout(3000)
     page.screenshot(path=os.path.join(sd, "c2_success.png"))
+    # 断言：验证发送成功（变量短信需处理文件，弹窗出现较慢，延长等待时间）
+    expect(page.locator(".ant-modal-confirm-title", has_text="已经成功提交发送")).to_be_visible(timeout=15000)
 
-    # 断言：验证发送成功
-    expect(
-        page.locator("html").get_by_role("document").filter(has_text="已经成功提交发送")
-    ).to_be_visible()

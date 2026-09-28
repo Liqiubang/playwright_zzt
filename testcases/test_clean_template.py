@@ -22,7 +22,8 @@ def test_clean_template(browser_context, env_config):
         pass
 
     # 自助通根据模版名称（不是模版内容）删除常量和变量模板
-    page.goto(f"{env_config['create_template_url']}")
+    # 页面资源加载慢，load 事件可能超时，改用 domcontentloaded
+    page.goto(f"{env_config['template_url']}", wait_until="domcontentloaded")
     # 搜索所有"测试自动化模板"
     page.get_by_role("textbox", name="请输入搜索关键词").click()
     page.get_by_role("textbox", name="请输入搜索关键词").fill("测试自动化模板")

@@ -110,7 +110,7 @@ def env_config():
         dict: 当前环境的配置字典
     """
     # env = os.getenv("prod", "prod")
-    env = os.getenv("sit", "sit")
+    env = os.getenv("stable", "stable")
     config = load_config()
     return config["environments"][env]
 
@@ -124,9 +124,14 @@ _test_reports = {}
 
 
 def pytest_sessionstart(session):
-    """Pytest 钩子：测试会话开始时记录时间"""
+    """Pytest 钩子：测试会话开始时记录时间，并清理上次运行残留的截图"""
     global _test_start_time
     _test_start_time = datetime.now()
+    # 删除截图目录中的旧截图，避免过期截图混入本次报告
+    if os.path.isdir(TestWeb.SCREENSHOT_DIR):
+        for fname in os.listdir(TestWeb.SCREENSHOT_DIR):
+            if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+                os.remove(os.path.join(TestWeb.SCREENSHOT_DIR, fname))
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -157,7 +162,7 @@ def pytest_sessionfinish(session, exitstatus):
     from testcases.report_helper import generate_html_report
 
     config = load_config()
-    env = os.getenv("sit", "sit")
+    env = os.getenv("stable", "stable")
     # env = os.getenv("prod", "prod")
     env_cfg = config["environments"][env]
 
